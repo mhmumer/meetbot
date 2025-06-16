@@ -8,8 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertTitle } from "@/components/ui/alert"
 import { useRouter } from "next/navigation"
+import { Alert, AlertTitle } from "@/components/ui/alert"
 import {
     Form,
     FormControl,
@@ -33,7 +33,8 @@ const formSchema = z.object({
 })
 
 export const SignInView = () => {
-    const router=useRouter()
+    const router = useRouter()
+
     const [pending, setPending] = useState(false)   
     const [error, setError] = useState<string | null>(null)
 
@@ -49,11 +50,37 @@ export const SignInView = () => {
         setPending(true)
 
        authClient.signIn.email(
-            {email:data.email, password:data.password},
+            {email:data.email, password:data.password, callbackURL:"/dashboard"},
+            {
+                onSuccess: () => {
+                    router.push("/dashboard")
+                    setPending(false)
+                },
+                onError: ({error}) => {
+                     setPending(false)
+                    setError(error.message)
+                },
+
+            }
+        )
+
+        
+
+    
+    }
+     const onSocial =  (provider: "github" | "google")=>{
+        setError(null)
+        setPending(true)
+
+       authClient.signIn.social(
+            {
+                provider: provider,
+                callbackURL:"/dashboard"
+
+            },
             {
                 onSuccess: () => {
                     setPending(false)
-                    router.push("/")
                 },
                 onError: ({error}) => {
                      setPending(false)
@@ -136,6 +163,7 @@ export const SignInView = () => {
       variant="outline"
       type="button"
       disabled={pending}
+      onClick={()=>onSocial("google")}
       className="group relative w-24 h-12 rounded-xl border border-gray-300 bg-white shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-primary"
     >
       <FaGoogle className="w-5 h-5 text-gray-700 transition-colors duration-300 group-hover:text-primary" />
@@ -146,9 +174,10 @@ export const SignInView = () => {
       variant="outline"
       type="button"
       disabled={pending}
+      onClick={()=>onSocial("github")}
       className="group relative w-24 h-12 rounded-xl border border-gray-300 bg-white shadow-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-gray-800"
     >
-      <Github className="w-5 h-5 text-gray-700 transition-colors duration-300 group-hover:text-black" />
+      <Github className="w-5 h-5 font-black  transition-colors duration-300 group-hover:text-black" />
       <span className="sr-only">Sign in with GitHub</span>
     </Button>
   </div>
